@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(cpu-matrix)
+project(exception-safe-stack)
 
 option(BUILD_TESTS "Build tests" ON)
 
@@ -17,7 +17,8 @@ if (BUILD_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     add_executable(${PROJECT_NAME}_tests
-        tests/stack_tests.cpp
+        tests/copy_move_tests.cpp
+        tests/operations_tests.cpp
     )
     target_link_libraries(${PROJECT_NAME}_tests PRIVATE GTest::gtest_main)
 
