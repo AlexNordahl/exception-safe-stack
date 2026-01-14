@@ -33,3 +33,44 @@ TEST(Push, OverfillingStack)
     ASSERT_EQ(stack1.top(), 6);
     ASSERT_FALSE(stack1.is_empty());
 }
+
+TEST(Pop, PopOneItem)
+{
+    Stack<double> stack1{5};
+
+    stack1.push(1);
+    stack1.push(2);
+    stack1.push(3);
+    stack1.push(4);
+
+    stack1.pop();
+
+    ASSERT_EQ(stack1.size(), 5);
+    ASSERT_EQ(stack1.count(), 3);
+    ASSERT_EQ(stack1.top(), 3);
+    ASSERT_FALSE(stack1.is_empty());
+}
+
+TEST(Pop, PopAndAdd)
+{
+    Stack<double> stack1{5};
+
+    stack1.push(1);
+    stack1.push(2);
+    stack1.push(3);
+    stack1.push(4);
+
+    stack1.pop();
+
+    stack1.push(4);
+
+    ASSERT_EQ(stack1.size(), 5);
+    ASSERT_EQ(stack1.count(), 4);
+    ASSERT_EQ(stack1.top(), 4);
+    ASSERT_FALSE(stack1.is_empty());
+}
+
+TEST(Pop, EmptyingStack)
+{
+    // to add
+}

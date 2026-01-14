@@ -17,6 +17,7 @@ if (BUILD_TESTS)
     FetchContent_MakeAvailable(googletest)
 
     add_executable(${PROJECT_NAME}_tests
+        tests/new_throws_tests.cpp
         tests/copy_move_tests.cpp
         tests/operations_tests.cpp
     )
