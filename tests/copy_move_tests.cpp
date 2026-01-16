@@ -41,6 +41,36 @@ TEST(Copying, CopyAssignment)
     ASSERT_EQ(stack2.top(), 3);
 }
 
+TEST(Copying, CopyConstructorUninitialized)
+{
+    Stack<int> stack1;
+    Stack<int> stack2 = stack1;
+
+    ASSERT_EQ(stack1.size(), 10);
+    ASSERT_EQ(stack1.count(), 0);
+
+    ASSERT_EQ(stack2.size(), 10);
+    ASSERT_EQ(stack2.count(), 0);
+
+    ASSERT_TRUE(stack1.is_empty());
+    ASSERT_TRUE(stack2.is_empty());
+}
+
+TEST(Copying, CopyAssignmentUninitialized)
+{
+    Stack<int> stack1, stack2;
+    stack2 = stack1;
+
+    ASSERT_EQ(stack1.size(), 10);
+    ASSERT_EQ(stack1.count(), 0);
+
+    ASSERT_EQ(stack2.size(), 10);
+    ASSERT_EQ(stack2.count(), 0);
+
+    ASSERT_TRUE(stack1.is_empty());
+    ASSERT_TRUE(stack2.is_empty());
+}
+
 TEST(Copying, MoveConstructor)
 {
     Stack<double> stack1{10};

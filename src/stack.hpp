@@ -14,7 +14,7 @@ public:
     Stack& operator=(const Stack&);
     Stack(Stack&&);
     Stack& operator=(Stack&&);
-    ~Stack() noexcept; // explicit noexcept
+    ~Stack() noexcept;  // explicit noexcept
 
     void push(const T&);
     // void push(const T&&);
@@ -32,8 +32,8 @@ private:
         return 2;
     }
 
-    void copy_data(const Stack&);
     void steal_data(Stack&&);
+    void clear();
 
     std::size_t m_top{};
     std::size_t m_nelems{};
@@ -49,9 +49,23 @@ inline Stack<T>::Stack(std::size_t nelems) :
 }
 
 template <typename T>
-inline Stack<T>::Stack(const Stack& other)
+inline Stack<T>::Stack(const Stack& other) :
+    m_top{other.m_top},
+    m_nelems{other.m_nelems}
 {
-    copy_data(other);
+    m_data = new T[other.m_nelems];
+    try
+    {
+        for (std::size_t i = 0; i < m_nelems; ++i)
+        {
+            m_data[i] = other.m_data[i];
+        }
+    }
+    catch (...)
+    {
+        clear();
+        throw;
+    }
 }
 
 template <typename T>
@@ -60,12 +74,22 @@ inline Stack<T>& Stack<T>::operator=(const Stack& other)
     if (this == &other)
         return *this;
 
+    // in case T throws try allocating before deleting m_data
+    T* try_data = new T[other.m_nelems];
+
     if (is_empty() == false)
     {
         delete[] m_data;
     }
 
-    copy_data(other);
+    m_data = try_data;
+    m_nelems = other.m_nelems;
+    m_top = other.m_top;
+
+    for (std::size_t i = 0; i < m_nelems; ++i)
+    {
+        m_data[i] = other.m_data[i];
+    }
 
     return *this;
 }
@@ -97,7 +121,7 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
 template <typename T>
 inline Stack<T>::~Stack() noexcept
 {
-    delete[] m_data;
+    clear();
 }
 
 template <typename T>
@@ -107,20 +131,26 @@ inline void Stack<T>::push(const T& element)
     {
         auto new_nelems = m_nelems * growth_factor();
         auto new_buffer = new T[new_nelems];
+        
         for (std::size_t i = 0; i < m_nelems; ++i)
         {
             new_buffer[i] = m_data[i];
         }
+
         delete[] m_data;
         m_data = new_buffer;
         m_nelems = new_nelems;
     }
+
     m_data[m_top++] = element;
 }
 
 template <typename T>
 inline T Stack<T>::top()
 {
+    if (is_empty())
+        throw std::runtime_error("cannot top empty stack");
+
     return m_data[m_top - 1];
 }
 
@@ -152,20 +182,7 @@ inline std::size_t Stack<T>::size() const noexcept
 template <typename T>
 inline bool Stack<T>::is_empty() const noexcept
 {
-    return m_nelems == 0;
-}
-
-template <typename T>
-inline void Stack<T>::copy_data(const Stack& other)
-{
-    m_data = new T[other.m_nelems];
-    m_nelems = other.m_nelems;
-    m_top = other.m_top;
-
-    for (std::size_t i = 0; i < m_nelems; ++i)
-    {
-        m_data[i] = other.m_data[i];
-    }
+    return m_top == 0;
 }
 
 template <typename T>
@@ -177,7 +194,17 @@ inline void Stack<T>::steal_data(Stack&& other)
 
     other.m_data = nullptr;
     other.m_top = 0;
-    other.m_nelems = 0;
+    other.m_nelems = 10;
+}
+
+template <typename T>
+inline void Stack<T>::clear()
+{
+    delete[] m_data;
+
+    m_data = nullptr;
+    m_nelems = 10;
+    m_top = 0;
 }
 
 #endif
