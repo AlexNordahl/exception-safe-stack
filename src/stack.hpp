@@ -33,7 +33,6 @@ private:
     }
 
     void steal_data(Stack&&);
-    void clear();
 
     std::size_t m_top{};
     std::size_t m_nelems{};
@@ -63,21 +62,22 @@ inline Stack<T>::Stack(const Stack& other) :
     }
     catch (...)
     {
-        clear();
+        delete[] m_data;
+        m_data = nullptr;
         throw;
     }
 }
 
+// do naprawy
 template <typename T>
 inline Stack<T>& Stack<T>::operator=(const Stack& other)
 {
     if (this == &other)
         return *this;
 
-    // in case T throws try allocating before deleting m_data
     T* try_data = new T[other.m_nelems];
 
-    if (is_empty() == false)
+    if (m_data != nullptr)
     {
         delete[] m_data;
     }
@@ -108,7 +108,7 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
         return *this;
     }
 
-    if (is_empty() == false)
+    if (m_data != nullptr)
     {
         delete[] m_data;
     }
@@ -121,7 +121,7 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
 template <typename T>
 inline Stack<T>::~Stack() noexcept
 {
-    clear();
+    delete[] m_data;
 }
 
 template <typename T>
@@ -131,10 +131,16 @@ inline void Stack<T>::push(const T& element)
     {
         auto new_nelems = m_nelems * growth_factor();
         auto new_buffer = new T[new_nelems];
-        
-        for (std::size_t i = 0; i < m_nelems; ++i)
+
+        try
         {
-            new_buffer[i] = m_data[i];
+            for (std::size_t i = 0; i < m_nelems; ++i)
+                new_buffer[i] = m_data[i];
+        }
+        catch (...)
+        {
+            delete[] new_buffer;
+            throw;
         }
 
         delete[] m_data;
@@ -142,7 +148,9 @@ inline void Stack<T>::push(const T& element)
         m_nelems = new_nelems;
     }
 
-    m_data[m_top++] = element;
+    auto temp_top = m_top;
+    m_data[temp_top] = element;
+    ++m_top;
 }
 
 template <typename T>
@@ -195,16 +203,6 @@ inline void Stack<T>::steal_data(Stack&& other)
     other.m_data = nullptr;
     other.m_top = 0;
     other.m_nelems = 10;
-}
-
-template <typename T>
-inline void Stack<T>::clear()
-{
-    delete[] m_data;
-
-    m_data = nullptr;
-    m_nelems = 10;
-    m_top = 0;
 }
 
 #endif

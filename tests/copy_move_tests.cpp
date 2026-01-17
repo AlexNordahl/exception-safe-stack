@@ -44,7 +44,7 @@ TEST(Copying, CopyAssignment)
 TEST(Copying, CopyConstructorUninitialized)
 {
     Stack<int> stack1;
-    Stack<int> stack2 = stack1;
+    Stack<int> stack2 {stack1};
 
     ASSERT_EQ(stack1.size(), 10);
     ASSERT_EQ(stack1.count(), 0);
@@ -81,7 +81,7 @@ TEST(Copying, MoveConstructor)
     
     Stack stack2 {std::move(stack1)};
 
-    ASSERT_EQ(stack1.size(), 0);
+    ASSERT_EQ(stack1.size(), 10);
     ASSERT_EQ(stack1.count(), 0);
     ASSERT_TRUE(stack1.is_empty());
 
