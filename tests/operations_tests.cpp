@@ -1,6 +1,22 @@
 #include "../src/stack.hpp"
 #include <gtest/gtest.h>
 
+TEST(Push, FillingUninitializedStack)
+{
+    Stack<double> stack1{};
+
+    stack1.push(1);
+    stack1.push(2);
+    stack1.push(3);
+    stack1.push(4);
+    stack1.push(5);
+    
+    ASSERT_EQ(stack1.size(), 8);
+    ASSERT_EQ(stack1.count(), 5);
+    ASSERT_EQ(stack1.top(), 5);
+    ASSERT_FALSE(stack1.is_empty());
+}
+
 TEST(Push, FillingStack)
 {
     Stack<double> stack1{5};
@@ -68,9 +84,4 @@ TEST(Pop, PopAndAdd)
     ASSERT_EQ(stack1.count(), 4);
     ASSERT_EQ(stack1.top(), 4);
     ASSERT_FALSE(stack1.is_empty());
-}
-
-TEST(Pop, EmptyingStack)
-{
-    // to add
 }

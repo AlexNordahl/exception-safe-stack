@@ -1,7 +1,7 @@
 #ifndef STACK_HPP
 #define STACK_HPP
 
-#include <cstddef>  // std::size_t
+#include <cstddef>
 #include <exception>
 #include <stdexcept>
 
@@ -9,17 +9,18 @@ template <typename T>
 class Stack
 {
 public:
-    Stack(std::size_t nelems = 10);
+    Stack() = default;
+    Stack(std::size_t nelems);
     Stack(const Stack&);
     Stack& operator=(const Stack&);
     Stack(Stack&&);
     Stack& operator=(Stack&&);
-    ~Stack() noexcept;  // explicit noexcept
+    ~Stack();
 
     void push(const T&);
-    // void push(const T&&);
+    void push(T&&);
 
-    T top();
+    T top() const;
     void pop();
 
     std::size_t count() const noexcept;
@@ -27,11 +28,7 @@ public:
     bool is_empty() const noexcept;
 
 private:
-    std::size_t growth_factor()
-    {
-        return 2;
-    }
-
+    std::size_t growth_factor() { return 2; }
     void steal_data(Stack&&);
 
     std::size_t m_top{};
@@ -42,7 +39,7 @@ private:
 template <typename T>
 inline Stack<T>::Stack(std::size_t nelems) :
     m_top{0},
-    m_nelems{nelems}
+    m_nelems{nelems == 0 ? 1 : nelems}
 {
     m_data = new T[m_nelems];
 }
@@ -62,7 +59,6 @@ inline Stack<T>::Stack(const Stack& other) :
     catch (...)
     {
         delete[] m_data;
-        m_data = nullptr;
         throw;
     }
 }
@@ -120,7 +116,7 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
 }
 
 template <typename T>
-inline Stack<T>::~Stack() noexcept
+inline Stack<T>::~Stack()
 {
     delete[] m_data;
 }
@@ -128,15 +124,22 @@ inline Stack<T>::~Stack() noexcept
 template <typename T>
 inline void Stack<T>::push(const T& element)
 {
+    push(T{element});
+}
+
+template <typename T>
+inline void Stack<T>::push(T&& element)
+{
     if (m_top == m_nelems)
     {
-        auto new_nelems = m_nelems * growth_factor();
-        auto new_buffer = new T[new_nelems];
+        auto new_nelems = m_nelems == 0 ? 1 : m_nelems * growth_factor();
+        T* new_buffer = nullptr;
 
         try
         {
+            new_buffer = new T[new_nelems];
             for (std::size_t i = 0; i < m_nelems; ++i)
-                new_buffer[i] = m_data[i];
+                new_buffer[i] = std::move(m_data[i]);
         }
         catch (...)
         {
@@ -150,12 +153,12 @@ inline void Stack<T>::push(const T& element)
     }
 
     auto temp_top = m_top;
-    m_data[temp_top] = element;
+    m_data[temp_top] = std::move(element);
     ++m_top;
 }
 
 template <typename T>
-inline T Stack<T>::top()
+inline T Stack<T>::top() const
 {
     if (is_empty())
         throw std::runtime_error("cannot top empty stack");
@@ -199,7 +202,7 @@ inline void Stack<T>::steal_data(Stack&& other)
 
     other.m_data = nullptr;
     other.m_top = 0;
-    other.m_nelems = 10;
+    other.m_nelems = 1;
 }
 
 #endif
