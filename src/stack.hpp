@@ -52,13 +52,12 @@ inline Stack<T>::Stack(const Stack& other) :
     m_top{other.m_top},
     m_nelems{other.m_nelems}
 {
-    m_data = new T[other.m_nelems];
+    m_data = nullptr;
     try
     {
+        m_data = new T[other.m_nelems];
         for (std::size_t i = 0; i < m_nelems; ++i)
-        {
             m_data[i] = other.m_data[i];
-        }
     }
     catch (...)
     {
@@ -68,28 +67,34 @@ inline Stack<T>::Stack(const Stack& other) :
     }
 }
 
-// do naprawy
 template <typename T>
 inline Stack<T>& Stack<T>::operator=(const Stack& other)
 {
     if (this == &other)
         return *this;
 
-    T* try_data = new T[other.m_nelems];
+    T* try_data = nullptr;
+
+    try
+    {
+        try_data = new T[other.m_nelems];
+        for (std::size_t i = 0; i < other.m_nelems; ++i)
+        {
+            try_data[i] = other.m_data[i];
+        }
+    }
+    catch (...)
+    {
+        delete[] try_data;
+        throw;
+    }
 
     if (m_data != nullptr)
-    {
         delete[] m_data;
-    }
 
     m_data = try_data;
     m_nelems = other.m_nelems;
     m_top = other.m_top;
-
-    for (std::size_t i = 0; i < m_nelems; ++i)
-    {
-        m_data[i] = other.m_data[i];
-    }
 
     return *this;
 }
@@ -104,14 +109,10 @@ template <typename T>
 inline Stack<T>& Stack<T>::operator=(Stack&& other)
 {
     if (this == &other)
-    {
         return *this;
-    }
 
     if (m_data != nullptr)
-    {
         delete[] m_data;
-    }
 
     steal_data(std::move(other));
 
@@ -166,13 +167,9 @@ template <typename T>
 inline void Stack<T>::pop()
 {
     if (m_top > 0)
-    {
         --m_top;
-    }
     else
-    {
         throw std::runtime_error("cannot pop empty stack");
-    }
 }
 
 template <typename T>
