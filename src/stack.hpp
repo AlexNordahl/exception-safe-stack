@@ -20,7 +20,8 @@ public:
     void push(const T&);
     void push(T&&);
 
-    T top() const;
+    T& top();
+    const T& top() const;
     void pop();
 
     std::size_t count() const noexcept;
@@ -53,7 +54,7 @@ inline Stack<T>::Stack(const Stack& other) :
     try
     {
         m_data = new T[other.m_nelems];
-        for (std::size_t i = 0; i < m_nelems; ++i)
+        for (std::size_t i = 0; i < m_top; ++i)
             m_data[i] = other.m_data[i];
     }
     catch (...)
@@ -74,7 +75,7 @@ inline Stack<T>& Stack<T>::operator=(const Stack& other)
     try
     {
         try_data = new T[other.m_nelems];
-        for (std::size_t i = 0; i < other.m_nelems; ++i)
+        for (std::size_t i = 0; i < other.m_top; ++i)
         {
             try_data[i] = other.m_data[i];
         }
@@ -124,7 +125,31 @@ inline Stack<T>::~Stack()
 template <typename T>
 inline void Stack<T>::push(const T& element)
 {
-    push(T{element});
+    if (m_top == m_nelems)
+    {
+        auto new_nelems = m_nelems == 0 ? 1 : m_nelems * growth_factor();
+        T* new_buffer = nullptr;
+
+        try
+        {
+            new_buffer = new T[new_nelems];
+            for (std::size_t i = 0; i < m_top; ++i)
+                new_buffer[i] = std::move(m_data[i]);
+        }
+        catch (...)
+        {
+            delete[] new_buffer;
+            throw;
+        }
+
+        delete[] m_data;
+        m_data = new_buffer;
+        m_nelems = new_nelems;
+    }
+
+    auto temp_top = m_top;
+    m_data[temp_top] = element;
+    ++m_top;
 }
 
 template <typename T>
@@ -138,7 +163,7 @@ inline void Stack<T>::push(T&& element)
         try
         {
             new_buffer = new T[new_nelems];
-            for (std::size_t i = 0; i < m_nelems; ++i)
+            for (std::size_t i = 0; i < m_top; ++i)
                 new_buffer[i] = std::move(m_data[i]);
         }
         catch (...)
@@ -158,7 +183,16 @@ inline void Stack<T>::push(T&& element)
 }
 
 template <typename T>
-inline T Stack<T>::top() const
+inline T& Stack<T>::top()
+{
+    if (is_empty())
+        throw std::runtime_error("cannot top empty stack");
+
+    return m_data[m_top - 1];
+}
+
+template <typename T>
+inline const T& Stack<T>::top() const
 {
     if (is_empty())
         throw std::runtime_error("cannot top empty stack");
@@ -202,7 +236,7 @@ inline void Stack<T>::steal_data(Stack&& other)
 
     other.m_data = nullptr;
     other.m_top = 0;
-    other.m_nelems = 1;
+    other.m_nelems = 0;
 }
 
 #endif

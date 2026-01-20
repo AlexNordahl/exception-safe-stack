@@ -1,0 +1,1 @@
+Zostało porównać względem artykułu

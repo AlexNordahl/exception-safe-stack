@@ -10,7 +10,7 @@ AccessModifierOffset: -4
 ColumnLimit: 80
 AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: None
+AllowAllConstructorInitializersOnOneLine: true
 
 BreakConstructorInitializers: AfterColon
 PackConstructorInitializers: Never
