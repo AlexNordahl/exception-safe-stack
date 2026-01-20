@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <exception>
 #include <stdexcept>
+#include <utility>
 
 template <typename T>
 class Stack
@@ -12,7 +13,7 @@ public:
     Stack() = default;
     Stack(std::size_t nelems);
     Stack(const Stack&);
-    Stack& operator=(const Stack&);
+    Stack& operator=(Stack);
     Stack(Stack&&);
     Stack& operator=(Stack&&);
     ~Stack();
@@ -29,8 +30,8 @@ public:
     bool is_empty() const noexcept;
 
 private:
+    void swap(Stack& first, Stack& other);
     std::size_t growth_factor() { return 2; }
-    void steal_data(Stack&&);
 
     std::size_t m_top{};
     std::size_t m_nelems{};
@@ -39,7 +40,6 @@ private:
 
 template <typename T>
 inline Stack<T>::Stack(std::size_t nelems) :
-    m_top{0},
     m_nelems{nelems == 0 ? 1 : nelems}
 {
     m_data = new T[m_nelems];
@@ -50,7 +50,6 @@ inline Stack<T>::Stack(const Stack& other) :
     m_top{other.m_top},
     m_nelems{other.m_nelems}
 {
-    m_data = nullptr;
     try
     {
         m_data = new T[other.m_nelems];
@@ -65,33 +64,9 @@ inline Stack<T>::Stack(const Stack& other) :
 }
 
 template <typename T>
-inline Stack<T>& Stack<T>::operator=(const Stack& other)
+inline Stack<T>& Stack<T>::operator=(Stack other)
 {
-    if (this == &other)
-        return *this;
-
-    T* try_data = nullptr;
-
-    try
-    {
-        try_data = new T[other.m_nelems];
-        for (std::size_t i = 0; i < other.m_top; ++i)
-        {
-            try_data[i] = other.m_data[i];
-        }
-    }
-    catch (...)
-    {
-        delete[] try_data;
-        throw;
-    }
-
-    if (m_data != nullptr)
-        delete[] m_data;
-
-    m_data = try_data;
-    m_nelems = other.m_nelems;
-    m_top = other.m_top;
+    swap(*this, other);
 
     return *this;
 }
@@ -99,7 +74,8 @@ inline Stack<T>& Stack<T>::operator=(const Stack& other)
 template <typename T>
 inline Stack<T>::Stack(Stack&& other)
 {
-    steal_data(std::move(other));
+    // finished here
+    swap(*this, other);
 }
 
 template <typename T>
@@ -111,7 +87,13 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
     if (m_data != nullptr)
         delete[] m_data;
 
-    steal_data(std::move(other));
+    m_nelems = other.m_nelems;
+    m_top = other.m_top;
+    m_data = other.m_data;
+
+    other.m_data = nullptr;
+    other.m_top = 0;
+    other.m_nelems = 0;
 
     return *this;
 }
@@ -228,15 +210,11 @@ inline bool Stack<T>::is_empty() const noexcept
 }
 
 template <typename T>
-inline void Stack<T>::steal_data(Stack&& other)
+inline void Stack<T>::swap(Stack& first, Stack& other)
 {
-    m_nelems = other.m_nelems;
-    m_top = other.m_top;
-    m_data = other.m_data;
-
-    other.m_data = nullptr;
-    other.m_top = 0;
-    other.m_nelems = 0;
+    std::swap(first.m_top, other.m_top);
+    std::swap(first.m_nelems, other.m_nelems);
+    std::swap(first.m_data, other.m_data);
 }
 
 #endif

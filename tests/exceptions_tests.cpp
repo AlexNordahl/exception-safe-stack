@@ -7,20 +7,19 @@
 struct ThrowOnAssign
 {
     static inline std::size_t assign_counter = 0;
-    static inline std::size_t throw_at = 0;  // 0 => never throw
-    static inline int alive = 0;
+    static inline std::size_t throw_at = 0;
+    static inline std::size_t alive = 0;
 
     int data{0};
 
-    ThrowOnAssign()
-    {
-        ++alive;
-    }
+    ThrowOnAssign() { ++alive; }
+
     explicit ThrowOnAssign(int x) :
         data(x)
     {
         ++alive;
     }
+
     ThrowOnAssign(const ThrowOnAssign& other) :
         data(other.data)
     {
@@ -35,10 +34,7 @@ struct ThrowOnAssign
         return *this;
     }
 
-    ~ThrowOnAssign()
-    {
-        --alive;
-    }
+    ~ThrowOnAssign() { --alive; }
 
     static void Reset(std::size_t new_throw_at = 0)
     {
@@ -60,18 +56,77 @@ TEST(StackExceptions, CopyConstructorThrows_NoLeak_SourceIntact)
         const auto alive_before = ThrowOnAssign::alive;
         EXPECT_EQ(src.count(), 2);
         EXPECT_EQ(src.top().data, 2);
+        EXPECT_EQ(src.size(), 3);
 
         ThrowOnAssign::Reset(2);
 
-        EXPECT_THROW((Stack<ThrowOnAssign>{src}), std::runtime_error);
+        EXPECT_THROW(Stack<ThrowOnAssign>{src}, std::runtime_error);
 
         EXPECT_EQ(src.count(), 2);
         EXPECT_EQ(src.top().data, 2);
+        EXPECT_EQ(src.size(), 3);
         EXPECT_EQ(ThrowOnAssign::alive, alive_before);
     }
 
     EXPECT_EQ(ThrowOnAssign::alive, 0);
 }
+
+TEST(StackExceptions, CopyAssignmentThrows_NoLeak_SourceIntact)
+{
+    ThrowOnAssign::Reset(0);
+    EXPECT_EQ(ThrowOnAssign::alive, 0);
+
+    {
+        Stack<ThrowOnAssign> src{3};
+        src.push(ThrowOnAssign{1});
+        src.push(ThrowOnAssign{2});
+
+        const auto alive_before = ThrowOnAssign::alive;
+        EXPECT_EQ(src.count(), 2);
+        EXPECT_EQ(src.top().data, 2);
+        EXPECT_EQ(src.size(), 3);
+
+        ThrowOnAssign::Reset(2);
+
+        Stack<ThrowOnAssign> other {};
+        EXPECT_THROW(other = src, std::runtime_error);
+
+        EXPECT_EQ(src.count(), 2);
+        EXPECT_EQ(src.top().data, 2);
+        EXPECT_EQ(src.size(), 3);
+        EXPECT_EQ(ThrowOnAssign::alive, alive_before);
+    }
+
+    EXPECT_EQ(ThrowOnAssign::alive, 0);
+}
+
+// TEST(StackExceptions, MoveConstructorThrows_NoLeak_SourceIntact)
+// {
+//     ThrowOnAssign::Reset(0);
+//     EXPECT_EQ(ThrowOnAssign::alive, 0);
+
+//     {
+//         Stack<ThrowOnAssign> src{3};
+//         src.push(ThrowOnAssign{1});
+//         src.push(ThrowOnAssign{2});
+
+//         const auto alive_before = ThrowOnAssign::alive;
+//         EXPECT_EQ(src.count(), 2);
+//         EXPECT_EQ(src.top().data, 2);
+//         EXPECT_EQ(src.size(), 3);
+
+//         ThrowOnAssign::Reset(2);
+
+//         EXPECT_THROW(Stack<ThrowOnAssign>{std::move(src)}, std::runtime_error);
+
+//         EXPECT_EQ(src.count(), 2);
+//         EXPECT_EQ(src.top().data, 2);
+//         EXPECT_EQ(src.size(), 3);
+//         EXPECT_EQ(ThrowOnAssign::alive, alive_before);
+//     }
+
+//     EXPECT_EQ(ThrowOnAssign::alive, 0);
+// }
 
 TEST(StackExceptions, PushThrows_NoGrow_CountUnchanged)
 {
