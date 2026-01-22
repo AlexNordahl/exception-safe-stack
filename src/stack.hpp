@@ -13,7 +13,7 @@ public:
     Stack() = default;
     Stack(std::size_t nelems);
     Stack(const Stack&);
-    Stack& operator=(Stack);
+    Stack& operator=(const Stack&);
     Stack(Stack&&);
     Stack& operator=(Stack&&);
     ~Stack();
@@ -32,6 +32,7 @@ public:
 private:
     void swap(Stack& first, Stack& other);
     std::size_t growth_factor() { return 2; }
+    void expand();
 
     std::size_t m_top{};
     std::size_t m_nelems{};
@@ -64,9 +65,13 @@ inline Stack<T>::Stack(const Stack& other) :
 }
 
 template <typename T>
-inline Stack<T>& Stack<T>::operator=(Stack other)
+inline Stack<T>& Stack<T>::operator=(const Stack& other)
 {
-    swap(*this, other);
+    if (this != &other)
+    {
+        Stack<T> temp{other};
+        swap(*this, temp);
+    }
 
     return *this;
 }
@@ -74,7 +79,6 @@ inline Stack<T>& Stack<T>::operator=(Stack other)
 template <typename T>
 inline Stack<T>::Stack(Stack&& other)
 {
-    // finished here
     swap(*this, other);
 }
 
@@ -87,9 +91,7 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
     if (m_data != nullptr)
         delete[] m_data;
 
-    m_nelems = other.m_nelems;
-    m_top = other.m_top;
-    m_data = other.m_data;
+    swap(*this, other);
 
     other.m_data = nullptr;
     other.m_top = 0;
@@ -107,27 +109,7 @@ inline Stack<T>::~Stack()
 template <typename T>
 inline void Stack<T>::push(const T& element)
 {
-    if (m_top == m_nelems)
-    {
-        auto new_nelems = m_nelems == 0 ? 1 : m_nelems * growth_factor();
-        T* new_buffer = nullptr;
-
-        try
-        {
-            new_buffer = new T[new_nelems];
-            for (std::size_t i = 0; i < m_top; ++i)
-                new_buffer[i] = std::move(m_data[i]);
-        }
-        catch (...)
-        {
-            delete[] new_buffer;
-            throw;
-        }
-
-        delete[] m_data;
-        m_data = new_buffer;
-        m_nelems = new_nelems;
-    }
+    expand();
 
     auto temp_top = m_top;
     m_data[temp_top] = element;
@@ -137,27 +119,7 @@ inline void Stack<T>::push(const T& element)
 template <typename T>
 inline void Stack<T>::push(T&& element)
 {
-    if (m_top == m_nelems)
-    {
-        auto new_nelems = m_nelems == 0 ? 1 : m_nelems * growth_factor();
-        T* new_buffer = nullptr;
-
-        try
-        {
-            new_buffer = new T[new_nelems];
-            for (std::size_t i = 0; i < m_top; ++i)
-                new_buffer[i] = std::move(m_data[i]);
-        }
-        catch (...)
-        {
-            delete[] new_buffer;
-            throw;
-        }
-
-        delete[] m_data;
-        m_data = new_buffer;
-        m_nelems = new_nelems;
-    }
+    expand();
 
     auto temp_top = m_top;
     m_data[temp_top] = std::move(element);
@@ -215,6 +177,32 @@ inline void Stack<T>::swap(Stack& first, Stack& other)
     std::swap(first.m_top, other.m_top);
     std::swap(first.m_nelems, other.m_nelems);
     std::swap(first.m_data, other.m_data);
+}
+
+template <typename T>
+inline void Stack<T>::expand()
+{
+    if (m_top == m_nelems)
+    {
+        auto new_nelems = m_nelems == 0 ? 1 : m_nelems * growth_factor();
+        T* new_buffer = nullptr;
+
+        try
+        {
+            new_buffer = new T[new_nelems];
+            for (std::size_t i = 0; i < m_top; ++i)
+                new_buffer[i] = std::move(m_data[i]);
+        }
+        catch (...)
+        {
+            delete[] new_buffer;
+            throw;
+        }
+
+        delete[] m_data;
+        m_data = new_buffer;
+        m_nelems = new_nelems;
+    }
 }
 
 #endif
