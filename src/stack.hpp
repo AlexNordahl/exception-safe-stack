@@ -91,7 +91,9 @@ inline Stack<T>& Stack<T>::operator=(Stack&& other)
     if (m_data != nullptr)
         delete[] m_data;
 
-    swap(*this, other);
+    m_data = other.m_data;
+    m_top = other.m_top;
+    m_nelems = other.m_nelems;
 
     other.m_data = nullptr;
     other.m_top = 0;
