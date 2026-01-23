@@ -20,6 +20,32 @@ TEST(Copying, CopyConstructor)
     ASSERT_EQ(stack1.top(), 3);
 }
 
+TEST(Copying, CopyConstructor2)
+{
+    Stack<double> stack1{10};
+
+    stack1.push(1);
+    stack1.push(2);
+    stack1.push(3);
+    stack1.push(4);
+    stack1.push(5);
+    stack1.push(6);
+    stack1.push(7);
+    stack1.push(8);
+    stack1.push(9);
+    stack1.push(10);
+
+    Stack stack2{stack1};
+
+    ASSERT_EQ(stack1.size(), 10);
+    ASSERT_EQ(stack1.count(), 10);
+
+    ASSERT_EQ(stack2.size(), 10);
+    ASSERT_EQ(stack2.count(), 10);
+
+    ASSERT_EQ(stack1.top(), 10);
+}
+
 TEST(Copying, CopyAssignment)
 {
     Stack<double> stack1{10};

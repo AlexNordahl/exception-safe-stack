@@ -14,8 +14,8 @@ public:
     Stack(std::size_t nelems);
     Stack(const Stack&);
     Stack& operator=(const Stack&);
-    Stack(Stack&&);
-    Stack& operator=(Stack&&);
+    Stack(Stack&&) noexcept;
+    Stack& operator=(Stack&&) noexcept;
     ~Stack();
 
     void push(const T&);
@@ -77,19 +77,18 @@ inline Stack<T>& Stack<T>::operator=(const Stack& other)
 }
 
 template <typename T>
-inline Stack<T>::Stack(Stack&& other)
+inline Stack<T>::Stack(Stack&& other) noexcept
 {
     swap(*this, other);
 }
 
 template <typename T>
-inline Stack<T>& Stack<T>::operator=(Stack&& other)
+inline Stack<T>& Stack<T>::operator=(Stack&& other) noexcept
 {
     if (this == &other)
         return *this;
 
-    if (m_data != nullptr)
-        delete[] m_data;
+    delete[] m_data;
 
     m_data = other.m_data;
     m_top = other.m_top;
