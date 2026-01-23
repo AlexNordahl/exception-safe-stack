@@ -192,7 +192,7 @@ inline void Stack<T>::expand()
         {
             new_buffer = new T[new_nelems];
             for (std::size_t i = 0; i < m_top; ++i)
-                new_buffer[i] = std::move(m_data[i]);
+                new_buffer[i] = std::move_if_noexcept(m_data[i]);
         }
         catch (...)
         {
